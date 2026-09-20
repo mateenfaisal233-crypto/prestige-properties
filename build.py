@@ -1,0 +1,643 @@
+import os
+
+html = r'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prestige Properties | Luxury Real Estate in London</title>
+    <meta name="description" content="Prestige Properties — London's premier luxury real estate agency. Exclusive villas, apartments, penthouses and commercial properties.">
+    <meta property="og:title" content="Prestige Properties | Luxury Real Estate London">
+    <meta property="og:description" content="Exclusive luxury properties in London's most prestigious addresses.">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: { 50:'#fefdfb', 100:'#fdf8f0', 200:'#f9edd8' },
+                        gold: { 400:'#d4a853', 500:'#c9952e', 600:'#b8860b' },
+                        charcoal: { 700:'#374151', 800:'#1f2937', 900:'#111827', 950:'#0a0e17' }
+                    },
+                    fontFamily: {
+                        display: ['"Playfair Display"', 'serif'],
+                        body: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+        body { font-family:'Inter',sans-serif; overflow-x:hidden; background:#0a0e17; color:#fff; }
+        .glass { background:rgba(255,255,255,0.06); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.08); }
+        .gold-gradient { background:linear-gradient(135deg, #d4a853, #c9952e, #b8860b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .btn-gold { background:linear-gradient(135deg,#d4a853,#b8860b); transition:all 0.4s cubic-bezier(0.4,0,0.2,1); }
+        .btn-gold:hover { transform:translateY(-3px); box-shadow:0 15px 40px rgba(212,168,83,0.3); }
+        .btn-outline-gold { border:1.5px solid #d4a853; color:#d4a853; background:transparent; transition:all 0.4s; }
+        .btn-outline-gold:hover { background:#d4a853; color:#0a0e17; transform:translateY(-3px); }
+        .card-luxury { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); transition:all 0.5s cubic-bezier(0.4,0,0.2,1); }
+        .card-luxury:hover { border-color:rgba(212,168,83,0.3); transform:translateY(-10px); box-shadow:0 30px 60px rgba(0,0,0,0.4); }
+        .card-luxury:hover .property-img { transform:scale(1.08); }
+        .property-img { transition:transform 0.7s cubic-bezier(0.4,0,0.2,1); }
+        .reveal { opacity:0; transform:translateY(40px); }
+        .reveal-left { opacity:0; transform:translateX(-60px); }
+        .reveal-right { opacity:0; transform:translateX(60px); }
+        .reveal-scale { opacity:0; transform:scale(0.9); }
+        .line-reveal { width:0; transition:width 1s ease; }
+        .nav-link::after { content:''; position:absolute; bottom:-4px; left:0; width:0; height:1px; background:#d4a853; transition:width 0.3s; }
+        .nav-link:hover::after { width:100%; }
+        .hero-overlay { background:linear-gradient(135deg, rgba(10,14,23,0.85) 0%, rgba(10,14,23,0.6) 50%, rgba(10,14,23,0.8) 100%); }
+        .noise { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999; opacity:0.02; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); }
+        .border-gold-subtle { border:1px solid rgba(212,168,83,0.15); }
+        @media (max-width:768px) { .hero-title { font-size:2.8rem !important; line-height:1.1 !important; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+    </style>
+</head>
+<body>
+    <div class="noise"></div>
+
+    <!-- NAVBAR -->
+    <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500 py-5">
+        <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-11 h-11 rounded-xl border border-gold-400/30 flex items-center justify-center group-hover:border-gold-400/60 transition-all">
+                    <span class="font-display text-lg font-bold gold-gradient">P</span>
+                </div>
+                <span class="font-display text-xl font-bold tracking-tight">Prestige<span class="gold-gradient"> Properties</span></span>
+            </a>
+            <ul class="hidden md:flex items-center gap-8">
+                <li><a href="#home" class="nav-link relative text-sm font-medium text-white/60 hover:text-gold-400 transition-colors">Home</a></li>
+                <li><a href="#properties" class="nav-link relative text-sm font-medium text-white/60 hover:text-gold-400 transition-colors">Properties</a></li>
+                <li><a href="#about" class="nav-link relative text-sm font-medium text-white/60 hover:text-gold-400 transition-colors">About</a></li>
+                <li><a href="#categories" class="nav-link relative text-sm font-medium text-white/60 hover:text-gold-400 transition-colors">Categories</a></li>
+                <li><a href="#testimonials" class="nav-link relative text-sm font-medium text-white/60 hover:text-gold-400 transition-colors">Testimonials</a></li>
+                <li><a href="#contact" class="btn-gold px-6 py-2.5 rounded-full text-charcoal-950 text-sm font-bold">Book Viewing</a></li>
+            </ul>
+            <button id="navToggle" class="md:hidden flex flex-col gap-1.5 p-2" aria-label="Menu">
+                <span class="w-6 h-0.5 bg-white rounded"></span>
+                <span class="w-6 h-0.5 bg-white rounded"></span>
+                <span class="w-4 h-0.5 bg-white rounded"></span>
+            </button>
+        </div>
+        <div id="mobileMenu" class="hidden md:hidden fixed inset-0 bg-charcoal-950/98 backdrop-blur-xl z-40">
+            <div class="flex flex-col items-center justify-center h-full gap-8">
+                <a href="#home" class="text-2xl font-display font-bold text-white mobile-link">Home</a>
+                <a href="#properties" class="text-2xl font-display font-bold text-white mobile-link">Properties</a>
+                <a href="#about" class="text-2xl font-display font-bold text-white mobile-link">About</a>
+                <a href="#categories" class="text-2xl font-display font-bold text-white mobile-link">Categories</a>
+                <a href="#testimonials" class="text-2xl font-display font-bold text-white mobile-link">Testimonials</a>
+                <a href="#contact" class="btn-gold px-8 py-3 rounded-full text-charcoal-950 font-bold mobile-link">Book Viewing</a>
+            </div>
+            <button id="navClose" class="absolute top-6 right-6 p-2" aria-label="Close">
+                <i data-lucide="x" class="w-8 h-8 text-white"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section id="home" class="relative min-h-screen flex items-center overflow-hidden">
+        <div class="absolute inset-0">
+            <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&q=80" alt="Luxury London property exterior" class="w-full h-full object-cover">
+            <div class="hero-overlay absolute inset-0"></div>
+        </div>
+        <div class="max-w-7xl mx-auto px-6 w-full relative z-10 py-32">
+            <div class="max-w-2xl">
+                <div class="reveal inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-8">
+                    <span class="w-2 h-2 rounded-full bg-gold-400 animate-pulse"></span>
+                    <span class="text-sm font-medium text-gold-400">London's Premier Property Agency</span>
+                </div>
+                <h1 class="hero-title font-display text-5xl md:text-7xl font-bold leading-[1.05] mb-6">
+                    <span class="reveal block text-white">Find Your</span>
+                    <span class="reveal gold-gradient block">Dream Home</span>
+                    <span class="reveal block text-white">In London</span>
+                </h1>
+                <p class="reveal text-lg text-white/60 max-w-lg mb-10 leading-relaxed">
+                    Exclusive access to London's most prestigious properties. From Georgian townhouses to contemporary penthouses, we curate extraordinary living experiences.
+                </p>
+                <div class="reveal flex flex-wrap gap-4">
+                    <a href="#properties" class="btn-gold inline-flex items-center gap-2 px-8 py-4 rounded-full text-charcoal-950 font-bold shadow-xl">
+                        Browse Properties
+                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </a>
+                    <a href="#contact" class="btn-outline-gold inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold">
+                        Schedule Viewing
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- Search Bar -->
+        <div class="absolute bottom-0 left-0 right-0 z-10">
+            <div class="max-w-5xl mx-auto px-6">
+                <div class="glass rounded-2xl p-6 -mb-8 relative">
+                    <div class="grid md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-white/40 mb-2 uppercase tracking-wider">Location</label>
+                            <select class="w-full bg-transparent text-white border-b border-white/20 pb-2 outline-none text-sm">
+                                <option value="" class="bg-charcoal-950">All Locations</option>
+                                <option class="bg-charcoal-950">Mayfair</option>
+                                <option class="bg-charcoal-950">Knightsbridge</option>
+                                <option class="bg-charcoal-950">Chelsea</option>
+                                <option class="bg-charcoal-950">Kensington</option>
+                                <option class="bg-charcoal-950">Notting Hill</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-white/40 mb-2 uppercase tracking-wider">Property Type</label>
+                            <select class="w-full bg-transparent text-white border-b border-white/20 pb-2 outline-none text-sm">
+                                <option class="bg-charcoal-950">All Types</option>
+                                <option class="bg-charcoal-950">Penthouse</option>
+                                <option class="bg-charcoal-950">Villa</option>
+                                <option class="bg-charcoal-950">Apartment</option>
+                                <option class="bg-charcoal-950">Townhouse</option>
+                                <option class="bg-charcoal-950">Commercial</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-white/40 mb-2 uppercase tracking-wider">Price Range</label>
+                            <select class="w-full bg-transparent text-white border-b border-white/20 pb-2 outline-none text-sm">
+                                <option class="bg-charcoal-950">Any Price</option>
+                                <option class="bg-charcoal-950">£1M - £3M</option>
+                                <option class="bg-charcoal-950">£3M - £5M</option>
+                                <option class="bg-charcoal-950">£5M - £10M</option>
+                                <option class="bg-charcoal-950">£10M+</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button class="btn-gold w-full py-3 rounded-xl text-charcoal-950 font-bold text-sm flex items-center justify-center gap-2">
+                                <i data-lucide="search" class="w-4 h-4"></i>
+                                Search Properties
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SPACER for search bar -->
+    <div class="h-24 bg-charcoal-950"></div>
+
+    <!-- FEATURED PROPERTIES -->
+    <section id="properties" class="py-24 bg-charcoal-950">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="reveal text-sm font-semibold gold-gradient tracking-widest uppercase mb-4 block">Featured Listings</span>
+                <h2 class="reveal font-display text-4xl md:text-5xl font-bold leading-tight mb-4">
+                    Exceptional <span class="gold-gradient">Properties</span>
+                </h2>
+                <p class="reveal text-white/40 max-w-2xl mx-auto">Handpicked luxury residences in London's most coveted postcodes. Each property is a masterwork of design and craftsmanship.</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card-luxury rounded-2xl overflow-hidden group">
+                    <div class="relative h-72 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80" alt="Luxury villa in Mayfair with private garden" class="w-full h-full object-cover property-img" loading="lazy">
+                        <div class="absolute top-4 left-4 glass rounded-full px-3 py-1 text-xs font-semibold text-gold-400">Featured</div>
+                        <div class="absolute bottom-4 right-4 glass rounded-full px-3 py-1 text-sm font-bold text-white">£8,500,000</div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-display text-xl font-bold mb-2">Mayfair Georgian Townhouse</h3>
+                        <div class="flex items-center gap-2 text-white/40 text-sm mb-4">
+                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                            <span>Mayfair, London W1</span>
+                        </div>
+                        <div class="flex gap-4 text-sm text-white/50 border-t border-white/10 pt-4">
+                            <span class="flex items-center gap-1"><i data-lucide="bed-double" class="w-4 h-4"></i> 5 Beds</span>
+                            <span class="flex items-center gap-1"><i data-lucide="bath" class="w-4 h-4"></i> 4 Baths</span>
+                            <span class="flex items-center gap-1"><i data-lucide="square" class="w-4 h-4"></i> 4,200 sqft</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-luxury rounded-2xl overflow-hidden group">
+                    <div class="relative h-72 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80" alt="Modern penthouse in Knightsbridge with city views" class="w-full h-full object-cover property-img" loading="lazy">
+                        <div class="absolute top-4 left-4 glass rounded-full px-3 py-1 text-xs font-semibold text-gold-400">New</div>
+                        <div class="absolute bottom-4 right-4 glass rounded-full px-3 py-1 text-sm font-bold text-white">£12,750,000</div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-display text-xl font-bold mb-2">Knightsbridge Penthouse Suite</h3>
+                        <div class="flex items-center gap-2 text-white/40 text-sm mb-4">
+                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                            <span>Knightsbridge, SW7</span>
+                        </div>
+                        <div class="flex gap-4 text-sm text-white/50 border-t border-white/10 pt-4">
+                            <span class="flex items-center gap-1"><i data-lucide="bed-double" class="w-4 h-4"></i> 4 Beds</span>
+                            <span class="flex items-center gap-1"><i data-lucide="bath" class="w-4 h-4"></i> 3 Baths</span>
+                            <span class="flex items-center gap-1"><i data-lucide="square" class="w-4 h-4"></i> 3,800 sqft</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-luxury rounded-2xl overflow-hidden group">
+                    <div class="relative h-72 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=600&q=80" alt="Chelsea luxury apartment with modern interior" class="w-full h-full object-cover property-img" loading="lazy">
+                        <div class="absolute top-4 left-4 glass rounded-full px-3 py-1 text-xs font-semibold text-gold-400">Exclusive</div>
+                        <div class="absolute bottom-4 right-4 glass rounded-full px-3 py-1 text-sm font-bold text-white">£4,200,000</div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-display text-xl font-bold mb-2">Chelsea Riverside Apartment</h3>
+                        <div class="flex items-center gap-2 text-white/40 text-sm mb-4">
+                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                            <span>Chelsea, SW3</span>
+                        </div>
+                        <div class="flex gap-4 text-sm text-white/50 border-t border-white/10 pt-4">
+                            <span class="flex items-center gap-1"><i data-lucide="bed-double" class="w-4 h-4"></i> 3 Beds</span>
+                            <span class="flex items-center gap-1"><i data-lucide="bath" class="w-4 h-4"></i> 2 Baths</span>
+                            <span class="flex items-center gap-1"><i data-lucide="square" class="w-4 h-4"></i> 2,100 sqft</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="reveal text-center mt-12">
+                <a href="#contact" class="btn-outline-gold inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold">
+                    View All Properties
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="py-24 bg-charcoal-900">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div class="reveal-left relative">
+                    <div class="rounded-3xl overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?w=800&q=80" alt="Prestige Properties luxury office interior" class="w-full h-[500px] object-cover" loading="lazy">
+                    </div>
+                    <div class="absolute -bottom-8 -right-8 glass rounded-2xl p-6 border-gold-subtle">
+                        <p class="font-display text-4xl font-bold gold-gradient">25+</p>
+                        <p class="text-sm text-white/50">Years of Excellence</p>
+                    </div>
+                </div>
+                <div>
+                    <span class="reveal text-sm font-semibold gold-gradient tracking-widest uppercase mb-4 block">About Prestige</span>
+                    <h2 class="reveal font-display text-4xl md:text-5xl font-bold leading-tight mb-6">
+                        London's Most Trusted <span class="gold-gradient">Property Advisors</span>
+                    </h2>
+                    <p class="reveal text-white/50 leading-relaxed mb-6">
+                        Since 2001, Prestige Properties has been the trusted choice for discerning buyers and sellers of luxury real estate in London. Our intimate market knowledge and unparalleled network deliver exceptional results.
+                    </p>
+                    <div class="reveal grid grid-cols-2 gap-6 mb-8">
+                        <div class="glass rounded-2xl p-5 border-gold-subtle">
+                            <p class="font-display text-3xl font-bold gold-gradient mb-1">£2.5B+</p>
+                            <p class="text-sm text-white/40">Property Sold</p>
+                        </div>
+                        <div class="glass rounded-2xl p-5 border-gold-subtle">
+                            <p class="font-display text-3xl font-bold gold-gradient mb-1">850+</p>
+                            <p class="text-sm text-white/40">Properties Sold</p>
+                        </div>
+                        <div class="glass rounded-2xl p-5 border-gold-subtle">
+                            <p class="font-display text-3xl font-bold gold-gradient mb-1">98%</p>
+                            <p class="text-sm text-white/40">Client Satisfaction</p>
+                        </div>
+                        <div class="glass rounded-2xl p-5 border-gold-subtle">
+                            <p class="font-display text-3xl font-bold gold-gradient mb-1">15</p>
+                            <p class="text-sm text-white/40">Expert Agents</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section id="categories" class="py-24 bg-charcoal-950">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="reveal text-sm font-semibold gold-gradient tracking-widest uppercase mb-4 block">Property Types</span>
+                <h2 class="reveal font-display text-4xl md:text-5xl font-bold leading-tight mb-4">
+                    Explore <span class="gold-gradient">Categories</span>
+                </h2>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="card-luxury rounded-2xl p-8 text-center group cursor-pointer">
+                    <div class="w-16 h-16 rounded-2xl bg-gold-400/10 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold-400/20 transition-all">
+                        <i data-lucide="home" class="w-7 h-7 text-gold-400"></i>
+                    </div>
+                    <h3 class="font-display text-lg font-bold mb-2">Luxury Villas</h3>
+                    <p class="text-sm text-white/40">120+ listings</p>
+                </div>
+                <div class="card-luxury rounded-2xl p-8 text-center group cursor-pointer">
+                    <div class="w-16 h-16 rounded-2xl bg-gold-400/10 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold-400/20 transition-all">
+                        <i data-lucide="building" class="w-7 h-7 text-gold-400"></i>
+                    </div>
+                    <h3 class="font-display text-lg font-bold mb-2">Penthouses</h3>
+                    <p class="text-sm text-white/40">85+ listings</p>
+                </div>
+                <div class="card-luxury rounded-2xl p-8 text-center group cursor-pointer">
+                    <div class="w-16 h-16 rounded-2xl bg-gold-400/10 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold-400/20 transition-all">
+                        <i data-lucide="landmark" class="w-7 h-7 text-gold-400"></i>
+                    </div>
+                    <h3 class="font-display text-lg font-bold mb-2">Apartments</h3>
+                    <p class="text-sm text-white/40">200+ listings</p>
+                </div>
+                <div class="card-luxury rounded-2xl p-8 text-center group cursor-pointer">
+                    <div class="w-16 h-16 rounded-2xl bg-gold-400/10 flex items-center justify-center mx-auto mb-6 group-hover:bg-gold-400/20 transition-all">
+                        <i data-lucide="briefcase" class="w-7 h-7 text-gold-400"></i>
+                    </div>
+                    <h3 class="font-display text-lg font-bold mb-2">Commercial</h3>
+                    <p class="text-sm text-white/40">65+ listings</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section id="testimonials" class="py-24 bg-charcoal-900">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="reveal text-sm font-semibold gold-gradient tracking-widest uppercase mb-4 block">Testimonials</span>
+                <h2 class="reveal font-display text-4xl md:text-5xl font-bold leading-tight">
+                    What Our <span class="gold-gradient">Clients Say</span>
+                </h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="card-luxury rounded-2xl p-8">
+                    <div class="flex gap-1 mb-4">
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                    </div>
+                    <p class="text-white/60 leading-relaxed mb-6 italic">"Prestige Properties found us the perfect family home in Kensington within two weeks. Their market knowledge is unmatched."</p>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-gold-400/10 flex items-center justify-center font-bold text-gold-400">JM</div>
+                        <div>
+                            <p class="font-semibold">James Morrison</p>
+                            <p class="text-sm text-white/40">Property Investor</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-luxury rounded-2xl p-8">
+                    <div class="flex gap-1 mb-4">
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                    </div>
+                    <p class="text-white/60 leading-relaxed mb-6 italic">"From viewing to completion, the entire process was seamless. They negotiated an excellent price for our Chelsea flat."</p>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-gold-400/10 flex items-center justify-center font-bold text-gold-400">SA</div>
+                        <div>
+                            <p class="font-semibold">Sarah Ahmed</p>
+                            <p class="text-sm text-white/40">First-time Buyer</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-luxury rounded-2xl p-8">
+                    <div class="flex gap-1 mb-4">
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                        <i data-lucide="star" class="w-5 h-5 fill-gold-400 text-gold-400"></i>
+                    </div>
+                    <p class="text-white/60 leading-relaxed mb-6 italic">"Exceptional service. They understood exactly what we were looking for and delivered beyond our expectations. Highly recommended."</p>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-gold-400/10 flex items-center justify-center font-bold text-gold-400">DW</div>
+                        <div>
+                            <p class="font-semibold">David Chen</p>
+                            <p class="text-sm text-white/40">CEO, Tech Ventures</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-24 relative overflow-hidden bg-charcoal-950">
+        <div class="absolute inset-0">
+            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=80" alt="London skyline at dusk" class="w-full h-full object-cover opacity-20">
+        </div>
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <h2 class="reveal font-display text-4xl md:text-5xl font-bold leading-tight mb-6">
+                Ready to Find Your <span class="gold-gradient">Perfect Property?</span>
+            </h2>
+            <p class="reveal text-white/50 text-lg max-w-2xl mx-auto mb-10">
+                Whether you are buying, selling, or investing, our expert team is here to guide you every step of the way.
+            </p>
+            <div class="reveal flex flex-wrap justify-center gap-4">
+                <a href="#contact" class="btn-gold inline-flex items-center gap-2 px-8 py-4 rounded-full text-charcoal-950 font-bold shadow-xl">
+                    Schedule a Viewing
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </a>
+                <a href="tel:+442079876543" class="inline-flex items-center gap-2 border-2 border-gold-400/30 text-gold-400 px-8 py-4 rounded-full font-semibold hover:bg-gold-400/10 transition-all hover:-translate-y-1">
+                    <i data-lucide="phone" class="w-5 h-5"></i>
+                    +44 (0) 207 987 6543
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="py-24 bg-charcoal-900">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-16">
+                <div>
+                    <span class="reveal text-sm font-semibold gold-gradient tracking-widest uppercase mb-4 block">Contact Us</span>
+                    <h2 class="reveal font-display text-4xl md:text-5xl font-bold leading-tight mb-6">
+                        Get In <span class="gold-gradient">Touch</span>
+                    </h2>
+                    <p class="reveal text-white/50 leading-relaxed mb-8">
+                        Ready to begin your property journey? Contact us for a confidential consultation.
+                    </p>
+                    <div class="reveal space-y-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-gold-400/10 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="map-pin" class="w-5 h-5 text-gold-400"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold">42 Berkeley Square</p>
+                                <p class="text-sm text-white/40">Mayfair, London W1J 5AW</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-gold-400/10 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="phone" class="w-5 h-5 text-gold-400"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold">+44 (0) 207 987 6543</p>
+                                <p class="text-sm text-white/40">Mon-Sat: 9am-7pm</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-gold-400/10 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="mail" class="w-5 h-5 text-gold-400"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold">enquiries@prestigeproperties.co.uk</p>
+                                <p class="text-sm text-white/40">Confidential consultations available</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="reveal-right">
+                    <form class="glass rounded-3xl p-8 border-gold-subtle" onsubmit="event.preventDefault(); alert('Thank you! Our team will contact you shortly.');">
+                        <div class="grid sm:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs font-medium text-white/40 mb-2 uppercase tracking-wider">First Name</label>
+                                <input type="text" placeholder="John" class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 outline-none transition-all text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-white/40 mb-2 uppercase tracking-wider">Last Name</label>
+                                <input type="text" placeholder="Smith" class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 outline-none transition-all text-sm">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-xs font-medium text-white/40 mb-2 uppercase tracking-wider">Email</label>
+                            <input type="email" placeholder="john@example.com" class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 outline-none transition-all text-sm">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-xs font-medium text-white/40 mb-2 uppercase tracking-wider">Budget Range</label>
+                            <select class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-gold-400 outline-none text-sm">
+                                <option class="bg-charcoal-950">£1M - £3M</option>
+                                <option class="bg-charcoal-950">£3M - £5M</option>
+                                <option class="bg-charcoal-950">£5M - £10M</option>
+                                <option class="bg-charcoal-950">£10M+</option>
+                            </select>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-xs font-medium text-white/40 mb-2 uppercase tracking-wider">Message</label>
+                            <textarea rows="4" placeholder="Tell us about your property requirements..." class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 outline-none transition-all text-sm resize-none"></textarea>
+                        </div>
+                        <button type="submit" class="btn-gold w-full py-4 rounded-xl text-charcoal-950 font-bold text-sm flex items-center justify-center gap-2">
+                            Send Enquiry
+                            <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-charcoal-950 text-white pt-20 pb-8 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-12 mb-16">
+                <div>
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-11 h-11 rounded-xl border border-gold-400/30 flex items-center justify-center">
+                            <span class="font-display text-lg font-bold gold-gradient">P</span>
+                        </div>
+                        <span class="font-display text-xl font-bold">Prestige<span class="gold-gradient"> Properties</span></span>
+                    </div>
+                    <p class="text-white/40 text-sm leading-relaxed mb-6">London's premier luxury real estate agency. Curating exceptional living experiences since 2001.</p>
+                    <div class="flex gap-3">
+                        <a href="#" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-gold-400/20 transition-colors"><i data-lucide="instagram" class="w-5 h-5 text-white/60"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-gold-400/20 transition-colors"><i data-lucide="linkedin" class="w-5 h-5 text-white/60"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-gold-400/20 transition-colors"><i data-lucide="twitter" class="w-5 h-5 text-white/60"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-6">Quick Links</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#about" class="text-white/40 text-sm hover:text-gold-400 transition-colors">About Us</a></li>
+                        <li><a href="#properties" class="text-white/40 text-sm hover:text-gold-400 transition-colors">Properties</a></li>
+                        <li><a href="#categories" class="text-white/40 text-sm hover:text-gold-400 transition-colors">Categories</a></li>
+                        <li><a href="#testimonials" class="text-white/40 text-sm hover:text-gold-400 transition-colors">Testimonials</a></li>
+                        <li><a href="#contact" class="text-white/40 text-sm hover:text-gold-400 transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-6">Services</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-white/40 text-sm hover:text-gold-400 transition-colors">Buy Property</a></li>
+                        <li><a href="#" class="text-white/40 text-sm hover:text-gold-400 transition-colors">Sell Property</a></li>
+                        <li><a href="#" class="text-white/40 text-sm hover:text-gold-400 transition-colors">Let Property</a></li>
+                        <li><a href="#" class="text-white/40 text-sm hover:text-gold-400 transition-colors">Property Valuation</a></li>
+                        <li><a href="#" class="text-white/40 text-sm hover:text-gold-400 transition-colors">Investment Advice</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-6">Office Hours</h4>
+                    <ul class="space-y-3 text-sm text-white/40">
+                        <li class="flex justify-between"><span>Monday - Friday</span><span class="text-white">9am - 7pm</span></li>
+                        <li class="flex justify-between"><span>Saturday</span><span class="text-white">10am - 5pm</span></li>
+                        <li class="flex justify-between"><span>Sunday</span><span class="text-white">By Appointment</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-sm text-white/30">&copy; 2026 Prestige Properties. All Rights Reserved. Designed & Developed by Mateen Faisal.</p>
+                <div class="flex gap-6">
+                    <a href="#" class="text-xs text-white/30 hover:text-gold-400 transition-colors">Privacy Policy</a>
+                    <a href="#" class="text-xs text-white/30 hover:text-gold-400 transition-colors">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
+        "name": "Prestige Properties",
+        "description": "London's premier luxury real estate agency.",
+        "url": "https://prestige-properties.vercel.app",
+        "telephone": "+442079876543",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "42 Berkeley Square",
+            "addressLocality": "London",
+            "postalCode": "W1J 5AW",
+            "addressCountry": "GB"
+        }
+    }
+    </script>
+
+    <script>
+        lucide.createIcons();
+
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.style.background = 'rgba(10,14,23,0.95)';
+                navbar.style.backdropFilter = 'blur(20px)';
+                navbar.style.boxShadow = '0 4px 30px rgba(0,0,0,0.3)';
+            } else {
+                navbar.style.background = 'rgba(10,14,23,0)';
+                navbar.style.backdropFilter = 'none';
+                navbar.style.boxShadow = 'none';
+            }
+        });
+
+        const navToggle = document.getElementById('navToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const navClose = document.getElementById('navClose');
+        navToggle.addEventListener('click', () => mobileMenu.classList.remove('hidden'));
+        navClose.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+        document.querySelectorAll('.mobile-link').forEach(l => l.addEventListener('click', () => mobileMenu.classList.add('hidden')));
+
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.utils.toArray('.reveal').forEach((el, i) => {
+            gsap.fromTo(el, { opacity:0, y:40 }, { opacity:1, y:0, duration:1, ease:'power3.out', scrollTrigger:{ trigger:el, start:'top 85%' }, delay: i%3*0.15 });
+        });
+        gsap.utils.toArray('.reveal-left').forEach(el => {
+            gsap.fromTo(el, { opacity:0, x:-60 }, { opacity:1, x:0, duration:1.2, ease:'power3.out', scrollTrigger:{ trigger:el, start:'top 85%' } });
+        });
+        gsap.utils.toArray('.reveal-right').forEach(el => {
+            gsap.fromTo(el, { opacity:0, x:60 }, { opacity:1, x:0, duration:1.2, ease:'power3.out', scrollTrigger:{ trigger:el, start:'top 85%' } });
+        });
+        gsap.utils.toArray('.reveal-scale').forEach(el => {
+            gsap.fromTo(el, { opacity:0, scale:0.9 }, { opacity:1, scale:1, duration:1.2, ease:'power3.out', scrollTrigger:{ trigger:el, start:'top 85%' } });
+        });
+    </script>
+</body>
+</html>'''
+
+with open(r'D:\Mark-L-main\New Website\prestige-properties\index.html', 'w', encoding='utf-8') as f:
+    f.write(html)
+print('Prestige Properties created successfully!')
+print('Size:', len(html), 'bytes')
